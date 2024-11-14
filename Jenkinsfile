@@ -7,17 +7,17 @@ pipeline {
                 checkout scm
             }
         }
-        
+
         stage('Setup') {
             steps {
                 script {
-                    // Check if virtual environment exists; if not, create and activate it
-                    sh '''
-                    if [ ! -d "venv" ]; then
-                        python3 -m venv venv
-                    fi
-                    bash -c "source venv/bin/activate && echo Virtual environment created and activated"
-                    '''
+                    // Check if virtual environment exists, if not, create it
+                    if (!fileExists('venv')) {
+                        sh 'python3 -m venv venv'
+                    }
+                    // Activate virtual environment and install flake8
+                    sh 'bash -c "source venv/bin/activate && pip install flake8"'
+                    echo 'Virtual environment created and activated'
                 }
             }
         }
@@ -25,21 +25,17 @@ pipeline {
         stage('Lint') {
             steps {
                 script {
-                    // Run linter here (example: flake8 for Python)
-                    sh '''
-                    bash -c "source venv/bin/activate && flake8 --max-line-length=120 ."
-                    '''
+                    // Activate virtual environment and run flake8 for linting
+                    sh 'bash -c "source venv/bin/activate && flake8 --max-line-length=120 ."'
                 }
             }
         }
-        
+
         stage('Test') {
             steps {
                 script {
-                    // Run tests here
-                    sh '''
-                    bash -c "source venv/bin/activate && python -m unittest discover"
-                    '''
+                    // Activate virtual environment and run tests
+                    sh 'bash -c "source venv/bin/activate && python -m unittest discover -s tests"'
                 }
             }
         }
@@ -47,10 +43,10 @@ pipeline {
         stage('Coverage') {
             steps {
                 script {
-                    // Run test coverage here
-                    sh '''
-                    bash -c "source venv/bin/activate && coverage run -m unittest discover && coverage report -m"
-                    '''
+                    // Activate virtual environment, run tests with coverage
+                    sh 'bash -c "source venv/bin/activate && coverage run -m unittest discover -s tests"'
+                    sh 'bash -c "source venv/bin/activate && coverage report -m"'
+                    sh 'bash -c "source venv/bin/activate && coverage html"'
                 }
             }
         }
@@ -58,10 +54,8 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // Deploy step example (replace with actual deployment command)
-                    sh '''
-                    bash -c "source venv/bin/activate && echo Deploying application..."
-                    '''
+                    // Deployment steps (this is just an example)
+                    echo 'Deployment stage...'
                 }
             }
         }
@@ -70,12 +64,13 @@ pipeline {
     post {
         always {
             cleanWs()
-        }
-        success {
-            echo 'Pipeline completed successfully!'
+            echo 'Pipeline completed.'
         }
         failure {
             echo 'Pipeline failed.'
+        }
+        success {
+            echo 'Pipeline succeeded.'
         }
     }
 }
