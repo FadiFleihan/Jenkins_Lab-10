@@ -1,50 +1,81 @@
 pipeline {
     agent any
-    environment {
-        VIRTUAL_ENV = 'venv'
-    }
+
     stages {
+        stage('Declarative: Checkout SCM') {
+            steps {
+                checkout scm
+            }
+        }
+        
         stage('Setup') {
             steps {
                 script {
-                    if (!fileExists("${env.WORKSPACE}/${VIRTUAL_ENV}")) {
-                        sh "python3 -m venv ${VIRTUAL_ENV}"
-                    }
-                    sh "source ${VIRTUAL_ENV}/bin/activate && pip install -r requirements.txt"
+                    // Check if virtual environment exists; if not, create and activate it
+                    sh '''
+                    if [ ! -d "venv" ]; then
+                        python3 -m venv venv
+                    fi
+                    bash -c "source venv/bin/activate && echo Virtual environment created and activated"
+                    '''
                 }
             }
         }
+
         stage('Lint') {
             steps {
                 script {
-                    sh "source ${VIRTUAL_ENV}/bin/activate && flake8 app.py"
+                    // Run linter here (example: flake8 for Python)
+                    sh '''
+                    bash -c "source venv/bin/activate && flake8 --max-line-length=120 ."
+                    '''
                 }
             }
         }
+        
         stage('Test') {
             steps {
                 script {
-                    sh "source ${VIRTUAL_ENV}/bin/activate && python -m unittest discover -s tests"
+                    // Run tests here
+                    sh '''
+                    bash -c "source venv/bin/activate && python -m unittest discover"
+                    '''
                 }
             }
         }
+
         stage('Coverage') {
             steps {
                 script {
-                    sh "source ${VIRTUAL_ENV}/bin/activate && coverage run -m unittest discover -s tests"
-                    sh "source ${VIRTUAL_ENV}/bin/activate && coverage report -m"
+                    // Run test coverage here
+                    sh '''
+                    bash -c "source venv/bin/activate && coverage run -m unittest discover && coverage report -m"
+                    '''
                 }
             }
         }
+
         stage('Deploy') {
             steps {
-                echo 'Deploying application...'
+                script {
+                    // Deploy step example (replace with actual deployment command)
+                    sh '''
+                    bash -c "source venv/bin/activate && echo Deploying application..."
+                    '''
+                }
             }
         }
     }
+
     post {
         always {
             cleanWs()
+        }
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed.'
         }
     }
 }
