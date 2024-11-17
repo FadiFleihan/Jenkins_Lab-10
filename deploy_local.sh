@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # define application directory
-APP_DIR= /home/zestfulcashew94/Desktop/lab10/jenkins_project/app.py 
+APP_DIR=""
 
 # navigate to the application directory
 echo "Navigating to application directory: $APP_DIR"
